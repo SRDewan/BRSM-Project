@@ -1,0 +1,59 @@
+---
+title: "Demographic Analysis"
+authors: "Debayan Saha (2019113002), Shaurya Dewan (2019101017), Snehal Kumar (2019101003)"
+date: "08/04/2023"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+# Basic Setup
+```{r}
+
+rm(list = setdiff(ls(), lsf.str()))
+library(readxl)
+library(ggplot2)
+library(fmsb)
+library(vcd)
+library(explore)
+library(corrplot)
+library(dplyr)
+library(car)
+
+demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
+excel_sheets(demo_data_file)
+pred_data_file <- "../data/PredictingOutcomes_ParticipantPredictions.xlsx"
+excel_sheets(pred_data_file)
+strat_data_file <- "../data/PredictingOutcomes_QualitativeStrategyRatings.xlsx"
+excel_sheets(strat_data_file)
+
+```
+
+# 1.
+```{r}
+
+data <- read_excel(data_file, sheet = "driving ability")
+df <- data[2:21, 1:3]
+colnames(df) <- c("1 night of sleep deprivation", "2 nights of sleep deprivation", "3 nights of sleep deprivation")
+i <- c(1, 2, 3)                                  # Specify columns you want to change
+df[ , i] <- apply(df[ , i], 2,            # Specify own function within apply
+                    function(x) as.numeric(as.character(x)))
+
+shapiro.test(df$`1 night of sleep deprivation`)
+shapiro.test(df$`2 nights of sleep deprivation`)
+shapiro.test(df$`3 nights of sleep deprivation`)
+
+df2 <- data.frame(c(df$`1 night of sleep deprivation`, df$`2 nights of sleep deprivation`, df$`3 nights of sleep deprivation`), c(rep("1", nrow(df)), rep("2", nrow(df)), rep("3", nrow(df))))
+colnames(df2) <- c("Driving ability score", "Nights of sleep deprivation")
+leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
+res.aov <- aov(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
+summary(res.aov)
+
+```
