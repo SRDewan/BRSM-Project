@@ -36,24 +36,28 @@ excel_sheets(strat_data_file)
 
 ```
 
-# 1.
+# Data Organization
 ```{r}
 
-data <- read_excel(data_file, sheet = "driving ability")
-df <- data[2:21, 1:3]
-colnames(df) <- c("1 night of sleep deprivation", "2 nights of sleep deprivation", "3 nights of sleep deprivation")
-i <- c(1, 2, 3)                                  # Specify columns you want to change
-df[ , i] <- apply(df[ , i], 2,            # Specify own function within apply
-                    function(x) as.numeric(as.character(x)))
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+    sheets <- excel_sheets(filename)
+    x <- lapply(sheets, function(X) read_excel(filename, sheet = X))
+    x <- lapply(x, as.data.frame)
+    names(x) <- sheets
+    x
+}
 
-shapiro.test(df$`1 night of sleep deprivation`)
-shapiro.test(df$`2 nights of sleep deprivation`)
-shapiro.test(df$`3 nights of sleep deprivation`)
+demo_data <- read_excel_allsheets(demo_data_file)
+pred_data <- read_excel_allsheets(pred_data_file)
 
-df2 <- data.frame(c(df$`1 night of sleep deprivation`, df$`2 nights of sleep deprivation`, df$`3 nights of sleep deprivation`), c(rep("1", nrow(df)), rep("2", nrow(df)), rep("3", nrow(df))))
-colnames(df2) <- c("Driving ability score", "Nights of sleep deprivation")
-leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-res.aov <- aov(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-summary(res.aov)
+# shapiro.test(df$`1 night of sleep deprivation`)
+# shapiro.test(df$`2 nights of sleep deprivation`)
+# shapiro.test(df$`3 nights of sleep deprivation`)
+# 
+# df2 <- data.frame(c(df$`1 night of sleep deprivation`, df$`2 nights of sleep deprivation`, df$`3 nights of sleep deprivation`), c(rep("1", nrow(df)), rep("2", nrow(df)), rep("3", nrow(df))))
+# colnames(df2) <- c("Driving ability score", "Nights of sleep deprivation")
+# leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
+# res.aov <- aov(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
+# summary(res.aov)
 
 ```
