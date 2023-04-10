@@ -26,6 +26,7 @@ library(explore)
 library(corrplot)
 library(dplyr)
 library(car)
+library(rstatix)
 
 demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
 excel_sheets(demo_data_file)
@@ -49,6 +50,18 @@ read_excel_allsheets <- function(filename, tibble = FALSE) {
 
 demo_data <- read_excel_allsheets(demo_data_file)
 pred_data <- read_excel_allsheets(pred_data_file)
+
+demo_data1A <- demo_data$`Study 1A`
+data1A <- pred_data$`Study 1A`
+data1A$gender <- demo_data1A$gender[match(data1A$participant_id, demo_data1A$participant_id)]
+
+# pred_data$`Study 1A`$ID <- seq.int(nrow(pred_data$`Study 1A`))
+df <- data1A[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
+df$participant_id <- as.factor(df$participant_id)
+# df$ID <- as.factor(df$ID)
+
+aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
+summary(aov_orig)
 
 # shapiro.test(df$`1 night of sleep deprivation`)
 # shapiro.test(df$`2 nights of sleep deprivation`)
