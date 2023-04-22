@@ -48,20 +48,41 @@ read_excel_allsheets <- function(filename, tibble = FALSE) {
     x
 }
 
-demo_data <- read_excel_allsheets(demo_data_file)
 pred_data <- read_excel_allsheets(pred_data_file)
+demo_data <- read_excel_allsheets(demo_data_file)
 
-demo_data1A <- demo_data$`Study 1A`
-data1A <- pred_data$`Study 1A`
-data1A$gender <- demo_data1A$gender[match(data1A$participant_id, demo_data1A$participant_id)]
+data <- pred_data
+for(i in names(pred_data)) {       # for-loop over columns
+  if(i == "KEY") {
+    next
+  }
+    
+  data[[i]] <- left_join(pred_data[[i]], demo_data[[i]], by = "participant_id") %>% 
+    select(-ends_with(".y"), study = study.x, generator = generator.x, rate = rate.x) 
+  data[[i]]$score_prob <- data[[i]]$score_prob1 + data[[i]]$score_prob2 + data[[i]]$score_prob3
+  data[[i]]$score_fin <- data[[i]]$score_fin1 + data[[i]]$score_fin2
+  
+}
 
-# pred_data$`Study 1A`$ID <- seq.int(nrow(pred_data$`Study 1A`))
-df <- data1A[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
-df$participant_id <- as.factor(df$participant_id)
-# df$ID <- as.factor(df$ID)
+data$`Study 1A`$prediction_recode
+anova <- function(df) {
+  df$participant_id <- as.factor(df$participant_id)
+  shapiro.test(df$$prediction_recode)
 
-aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
-summary(aov_orig)
+  # df <- curr_pred_data[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
+# leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
+
+  aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
+  summary(aov_orig)
+}
+
+for(i in names(pred_data)) {       # for-loop over columns
+  if(i == "KEY") {
+    next
+  }
+  
+  anova(data[[i]])
+}
 
 # shapiro.test(df$`1 night of sleep deprivation`)
 # shapiro.test(df$`2 nights of sleep deprivation`)
