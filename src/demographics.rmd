@@ -27,6 +27,7 @@ library(corrplot)
 library(dplyr)
 library(car)
 library(rstatix)
+library(ggpubr)
 
 demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
 excel_sheets(demo_data_file)
@@ -64,17 +65,53 @@ for(i in names(pred_data)) {       # for-loop over columns
   
 }
 
-data$`Study 1A`$prediction_recode
 anova <- function(df) {
   df$participant_id <- as.factor(df$participant_id)
-  shapiro.test(df$$prediction_recode)
+
+  # bxp <- boxplot(
+  # df, x = "terminal_streak_length", y = "prediction_recode",
+  # color = "generator", palette = "jco"
+  # )
+  
+  #outlier detection
+  print(df %>%
+    group_by(terminal_streak_length, generator) %>%
+    identify_outliers(prediction_recode))
+
+  #Shapiro-Wilk test
+  print(df %>%
+    group_by(terminal_streak_length, generator) %>%
+    shapiro_test(prediction_recode))
+  
+  #Q-Q plot
+  print(ggqqplot(df, "prediction_recode", ggtheme = theme_bw()) +
+    facet_grid(terminal_streak_length ~ generator))
+  
+  #Levene test
+  print(df %>%
+    group_by(terminal_streak_length) %>%
+    levene_test(prediction_recode ~ generator))
+  
+  #Box-m test
+  print(box_m(df[, "prediction_recode", drop = FALSE], df$generator))
+    
+  # shapiro.test(df$prediction_recode)
 
   # df <- curr_pred_data[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
 # leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
 
-  aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
-  summary(aov_orig)
+  # aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
+  # summary(aov_orig)
 }
+
+# df$ID <- seq.int(nrow(df))
+# df$generator <- as.factor(df$generator)
+# df$terminal_streak_length <- as.factor(df$terminal_streak_length)
+# res <- anova_test(
+#   data = df, dv = prediction_recode, wid = ID,
+#   between = generator, within = terminal_streak_length
+#   )
+# get_anova_table(res.aov)
 
 for(i in names(pred_data)) {       # for-loop over columns
   if(i == "KEY") {
@@ -83,15 +120,5 @@ for(i in names(pred_data)) {       # for-loop over columns
   
   anova(data[[i]])
 }
-
-# shapiro.test(df$`1 night of sleep deprivation`)
-# shapiro.test(df$`2 nights of sleep deprivation`)
-# shapiro.test(df$`3 nights of sleep deprivation`)
-# 
-# df2 <- data.frame(c(df$`1 night of sleep deprivation`, df$`2 nights of sleep deprivation`, df$`3 nights of sleep deprivation`), c(rep("1", nrow(df)), rep("2", nrow(df)), rep("3", nrow(df))))
-# colnames(df2) <- c("Driving ability score", "Nights of sleep deprivation")
-# leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-# res.aov <- aov(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-# summary(res.aov)
 
 ```
