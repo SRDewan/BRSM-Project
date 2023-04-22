@@ -66,14 +66,8 @@ for(i in names(pred_data)) {       # for-loop over columns
 }
 
 anova <- function(df) {
-  df <- df %>%
-    convert_as_factor(participant_id, generator, terminal_streak_length)
-  
-  # bxp <- boxplot(
-  # df, x = "terminal_streak_length", y = "prediction_recode",
-  # color = "generator", palette = "jco"
-  # )
-  
+  df$participant_id <- as.factor(df$participant_id)
+
   #outlier detection
   print(df %>%
     group_by(terminal_streak_length, generator) %>%
@@ -88,90 +82,40 @@ anova <- function(df) {
   print(ggqqplot(df, "prediction_recode", ggtheme = theme_bw()) +
     facet_grid(terminal_streak_length ~ generator))
   
-  #Levene test
+  #Levene test for homogeneity of variances
   print(df %>%
     group_by(terminal_streak_length) %>%
     levene_test(prediction_recode ~ generator))
   
-  #Box-m test
+  #Box-m test for sphericity
   print(box_m(df[, "prediction_recode", drop = FALSE], df$generator))
-  
-  #Anova test
-
-  print(sapply(lapply(df, unique), length))
-  df$ID <- seq.int(nrow(df))
-  print(df)
-  res.aov <- 
-    anova_test(data = df, 
-               formula=prediction_recode~terminal_streak_length*generator*participant_id
-               + Error(participant_id/terminal_streak_length), 
-               dv = prediction_recode, wid=ID, within = terminal_streak_length,
-               between = c(participant_id,generator))
-  get_anova_table(res.aov, correction=c("GG"))
-  
-  # df <- curr_pred_data[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
-# leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-
+    
   # aov_orig <- aov(prediction_recode ~ generator * gender * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
   # summary(aov_orig)
 }
 
-# df$ID <- seq.int(nrow(df))
-# df$generator <- as.factor(df$generator)
-# df$terminal_streak_length <- as.factor(df$terminal_streak_length)
-# res <- anova_test(
-#   data = df, dv = prediction_recode, wid = ID,
-#   between = generator, within = terminal_streak_length
-#   )
-# get_anova_table(res.aov)
+df$ID <- as.factor(seq.int(nrow(df)))
+df$generator <- as.factor(df$generator)
+df$terminal_streak_length <- as.factor(df$terminal_streak_length)
+df$prediction_recode <- as.integer(df$prediction_recode)
+sub_df <- df[c("ID", "generator", "terminal_streak_length", "prediction_recode")]
+res <- anova_test(
+  data = sub_df, dv = prediction_recode, wid = ID,
+  between = generator, within = terminal_streak_length
+  )
+
+# mauchly.test(df, )
+# df <- data$`Study 1A`
+# aov_orig <- aov(prediction_recode ~ generator * terminal_streak_length + Error(participant_id / terminal_streak_length), data = df)
+# print(summary(aov_orig))
+
 
 for(i in names(pred_data)) {       # for-loop over columns
   if(i == "KEY") {
     next
   }
   
-  res<-anova(data[[i]])
-}
-res
-
-```
-
-
-```{r}
-library(dplyr)
-for(i in names(pred_data)) {       # for-loop over columns
-  if(i == "KEY") {
-    next
-  }
-  new_data <- data[[i]] %>%
-    gather(key = "generator", value = "prediction") %>%
-    convert_as_factor(participant_id,generator)
-}
-new_data %>% sample_n_by(generator, prediction_recode, size = 1)
-
-# Average Probability Participants Assigned to Repetition of Terminal Streaks, by Streak Length and Condition
-avg_prob_grouped <- function(df){
+  anova(data[[i]])
 }
 
-# Proportion of Participants Predicting Repetition of Terminal Streaks, by Streak Length and Condition
-#One way Mixed ANOVA
-mixed_anova <- function(df) {
-  df$generator <- as.factor(df$generator)
-  boxplot(df$generator~df$prediction_recode)
-  df$participant_id <- as.factor(df$participant_id)
-  shapiro.test(df$prediction_recode[0:5000])
-  leveneTest(df$prediction_recode~df$generator,data=df)
-
-  # df <- curr_pred_data[c("participant_id", "generator", "terminal_streak_length", "prediction_recode", "gender")]
-# leveneTest(`Driving ability score` ~ `Nights of sleep deprivation`, data = df2)
-}
-
-for(i in names(pred_data)) {       # for-loop over columns
-  if(i == "KEY") {
-    next
-  }
-  res <- mixed_anova(data[[i]])
-}
-
-res
 ```
