@@ -64,6 +64,7 @@ for(i in names(pred_data)) {       # for-loop over columns
   
 }
 ```
+
 ```{r}
 data1A <- data.frame(data[[names(data)[2]]])
 data1B <- data.frame(data[[names(data)[3]]])
@@ -72,10 +73,64 @@ data2B <- data.frame(data[[names(data)[5]]])
 data3A <- data.frame(data[[names(data)[6]]])
 data3B <- data.frame(data[[names(data)[7]]])
 ```
+```{r}
+# function to create a new dataframe which takes binary prediction
+study_b <- function(data){  
+  df <- data.frame()
+  for (i in 2:7) {
+    x <- data[which(data$terminal_streak_length==i),]
+    for (gen in levels(as.factor(data$generator))){
+      y <- x[which(x$generator==gen),]
+      tot <- nrow(y)
+      y <- y[which(y$prediction_recode==1),]
+      frac <- nrow(y)/tot
+      # print(c(frac, tot, gen, i))
+      df <- rbind(df, c(i, as.numeric(frac), gen))
+    }
+  }
+  colnames(df) <- c("terminal_streak_length", "prediction_recode", "generator")
+  df[,2] <- as.numeric(df[,2])
+  # print(df)
+  return(df)
+}
+```
 
 ```{r}
+ggboxplot(data1A[which(data1A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
+color = "generator", palette = "jco") + labs(title = "Study 1A")
+```
+```{r}
+new <- study_b(data1B)
+ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
+  geom_point(aes(color=generator))+
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 1B")
+```
+```{r}
+ggboxplot(data2A[which(data2A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
+color = "generator", palette = "jco") + labs(title = "Study 2A")
+```
+```{r}
+new <- study_b(data2B)
+ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
+  geom_point(aes(color=generator))+
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 2B")
+```
+
+```{r}
+ggboxplot(data3A[which(data3A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
+color = "generator", palette = "jco") + labs(title = "Study 3A")
+```
+```{r}
+new <- study_b(data3B)
+ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
+  geom_point(aes(color=generator))+
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 3B")
+```
+```{r}
 ord_corr <- function(data){
-  x <- data.frame(data[,c(3, (ncol(data)-3):ncol(data))])
+  search_list <- c("generator", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
   x[,1] <- as.factor(x[,1])
   x[,3] <- x[,3]-1
   x[,4] <- x[,4]+1
@@ -91,35 +146,37 @@ pl_corr <- function(data){
   corr_val <- ord_corr(data)
   corrplot(corr_val, method="color", tl.col = "black", main="Correlation", mar=c(0,0,1,0))
 }
-pl_corr(demo_data1A)
+pl_corr(data1A)
 ```
 ```{r}
-pl_corr(demo_data1B)
-```
-
-
-```{r}
-pl_corr(demo_data2A)
+pl_corr(data1B)
 ```
 
 
 ```{r}
-pl_corr(demo_data2B)
+pl_corr(data2A)
 ```
 
 
 ```{r}
-pl_corr(demo_data3A)
+pl_corr(data2B)
 ```
 
 
 ```{r}
-pl_corr(demo_data3B)
+pl_corr(data3A)
+```
+
+
+```{r}
+pl_corr(data3B)
 ```
 
 ```{r}
 scaled_corr <- function(data){
-  x <- data.frame(data[,c(3, (ncol(data)-4):ncol(data))])
+  search_list <- c("generator", "age", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
   x[,1] <- as.factor(x[,1])
   x[] <- sapply(x, as.numeric)
   x[] <- sapply(x, scale)
@@ -132,6 +189,9 @@ pl_scale_corr <- function(data){
   corr_val <- scaled_corr(data)
   corrplot(corr_val, method="color", tl.col = "black", main="Correlation", mar=c(0,0,1,0))
 }
-pl_scale_corr(demo_data1A)
+pl_scale_corr(data1A)
+```
+```{r}
+
 ```
 
