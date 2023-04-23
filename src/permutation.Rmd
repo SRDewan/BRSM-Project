@@ -1,0 +1,418 @@
+---
+title: "Permutation"
+authors: "Debayan Saha (2019113002), Shaurya Dewan (2019101017), Snehal Kumar (2019101003)"
+date: "08/04/2023"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+# Basic Setup
+```{r}
+
+rm(list = setdiff(ls(), lsf.str()))
+library(readxl)
+library(ggplot2)
+library(fmsb)
+library(vcd)
+library(explore)
+library(corrplot)
+library(dplyr)
+library(car)
+library(rstatix)
+library(rmcorr)
+library(ggpubr)
+```
+# data assignment
+```{r}
+demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
+excel_sheets(demo_data_file)
+pred_data_file <- "../data/PredictingOutcomes_ParticipantPredictions.xlsx"
+excel_sheets(pred_data_file)
+strat_data_file <- "../data/PredictingOutcomes_QualitativeStrategyRatings.xlsx"
+excel_sheets(strat_data_file)
+
+```
+
+# Data Organization
+```{r}
+
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+    sheets <- excel_sheets(filename)
+    x <- lapply(sheets, function(X) read_excel(filename, sheet = X))
+    x <- lapply(x, as.data.frame)
+    names(x) <- sheets
+    x
+}
+
+demo_data <- read_excel_allsheets(demo_data_file)
+pred_data <- read_excel_allsheets(pred_data_file)
+
+data <- pred_data
+for(i in names(pred_data)) {       # for-loop over columns
+  if(i == "KEY") {
+    next
+  }
+    
+  data[[i]] <- left_join(pred_data[[i]], demo_data[[i]], by = "participant_id") %>% 
+    select(-ends_with(".y"), study = study.x, generator = generator.x, rate = rate.x) 
+  data[[i]]$score_prob <- data[[i]]$score_prob1 + data[[i]]$score_prob2 + data[[i]]$score_prob3
+  data[[i]]$score_fin <- data[[i]]$score_fin1 + data[[i]]$score_fin2
+  
+}
+```
+# splitting the studies 
+```{r}
+data1A <- data.frame(data[[names(data)[2]]])
+data1B <- data.frame(data[[names(data)[3]]])
+data2A <- data.frame(data[[names(data)[4]]])
+data2B <- data.frame(data[[names(data)[5]]])
+data3A <- data.frame(data[[names(data)[6]]])
+data3B <- data.frame(data[[names(data)[7]]])
+```
+# for getting average values
+
+```{r}
+avg_calc <- function(data, study){
+  df <- data.frame()
+  search_list <- c("generator", "participant_id", "type", "terminal_streak_length", "prediction_recode")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
+  x <- data.frame(x[which(x$type == "target"),])
+  # print(x)
+  for(i in unique(x$participant_id)){
+    # print(x[which(x$participant_id == i),]$generator[1])
+    if(study == 0){
+      char = "A"
+    }
+    else{
+      char = "B"
+    }
+    df <- rbind(df, c(char, x[which(x$participant_id == i),]$generator[1], i, mean(x[which(x$participant_id == i),]$prediction_recode)))
+  }
+  colnames(df) <- c("study", "generator", "participant_id", "prediction_recode")
+  df[,3] <- as.numeric(df[,3])
+  if(study == 0)
+  {
+    df[,4] <- as.numeric(df[,4])/100
+    df[,4] <- as.numeric(df[,4])
+  }
+  else
+  {
+    df[,4] <- as.numeric(df[,4])
+  }
+  return(df)
+}
+# 2nd argument 0 > study a
+a <- avg_calc(data1A, 0)
+b <- avg_calc(data1B, 1)
+c <- rbind(a, b)
+print(c)
+
+```
+# permutation test for paper recreation
+```{r}
+permutation.test <- function(grp1, grp2, n, gener){
+  grp1 <- avg_calc(grp1, 0)
+  grp1 <- grp1[which(grp1$generator == gener),]
+  a <- as.numeric(grp1$prediction_recode)
+  grp2 <- avg_calc(grp2, 1)
+  grp2 <- grp2[which(grp2$generator == gener),]
+  b <- as.numeric(grp2$prediction_recode)
+  combined <- rbind(grp1, grp2)
+  type <- combined$study
+  # print(c)
+  original <- t.test(a, b, var.equal = FALSE)
+  original <- original$statistic
+  distribution=c()
+  result=0
+  for(i in 1:n){
+    sam <- sample(type, length(type), FALSE)
+    g1 <- as.numeric(grp1$prediction_recode[which(sam=="A")])
+    g2 <- as.numeric(grp2$prediction_recode[which(sam=="B")])
+    tstat <- t.test(g1, g2, var.equal = FALSE)
+    distribution[i]= tstat$statistic
+  }
+  # result=sum(distribution >= original)/(n)
+  undirec_result=sum(abs(distribution) >= abs(original))/(n)
+  return(list(distribution, undirec_result, original))
+}
+```
+# study 1
+```{r}
+test1 <- permutation.test(data1A, data1B, 10000, "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 1 - Analyst")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data1A, data1B, 10000, "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 1 - Bingo")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data1A, data1B, 10000, "stock")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 1 - Stock")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+# study 2
+```{r}
+test1 <- permutation.test(data2A, data2B, 10000, "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 2 - Analyst")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data2A, data2B, 10000, "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 2 - Bingo")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data2A, data2B, 10000, "stock")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 2 - Stock")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+# study 3
+```{r}
+test1 <- permutation.test(data3A, data3B, 10000, "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 3 - Analyst")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data3A, data3B, 10000, "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 3 - Bingo")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+```{r}
+test1 <- permutation.test(data3A, data3B, 10000, "stock")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = "Study 3 - Stock")
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value: ", non_signi))
+```
+# permutation test for new study
+```{r}
+permutation.test <- function(data, n, gener1, gener2){
+  data <- avg_calc(data, 0)
+  gener1 <- "stock"
+  gener2 <- "analyst"
+  grp1 <- data[which(data$generator == gener1),]
+  a <- as.numeric(grp1$prediction_recode)
+  grp2 <- data[which(data$generator == gener2),]
+  b <- as.numeric(grp2$prediction_recode)
+  combined <- rbind(grp1, grp2)
+  type <- combined$generator
+  # print(c)
+  original <- t.test(a, b, var.equal = FALSE)
+  original <- original$statistic
+  distribution=c()
+  result=0
+  for(i in 1:n){
+    sam <- sample(type, length(type), FALSE)
+    g1 <- as.numeric(grp1$prediction_recode[which(sam==gener1)])
+    g2 <- as.numeric(grp2$prediction_recode[which(sam==gener2)])
+    tstat <- t.test(g1, g2, var.equal = FALSE)
+    distribution[i]= tstat$statistic
+  }
+  # result=sum(distribution >= original)/(n)
+  undirec_result=sum(abs(distribution) >= abs(original))/(n)
+  return(list(distribution, undirec_result, original))
+}
+```
+# Study 1A
+```{r}
+d <- data1A
+stu <- "1A"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+# Study 1B
+```{r}
+d <- data1B
+stu <- "1B"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+# Study 2A
+```{r}
+d <- data2A
+stu <- "2A"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+# Study 2B
+```{r}
+d <- data2B
+stu <- "2B"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+# Study 3A
+```{r}
+d <- data3A
+stu <- "3A"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+# Study 3B
+```{r}
+d <- data3B
+stu <- "3B"
+test1 <- permutation.test(d, 10000, "stock", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SA: ", non_signi))
+test1 <- permutation.test(d, 10000, "bingo", "analyst")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Bingo & Analyst"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value BA: ", non_signi))
+test1 <- permutation.test(d, 10000, "stock", "bingo")
+test2 <- unlist(test1[1])
+non_signi <- unlist(test1[2])
+hist(test2, xlab = "T statistic", main = paste0("Study ",stu," - Stock & Bingo"))
+axis(side=1, at=c(-6,6))
+abline(v = unlist(test1[3]), col="red")
+print(c("Non Directional significance value SB: ", non_signi))
+```
+
+
