@@ -1,0 +1,127 @@
+---
+title: "t-test"
+authors: "Debayan Saha (2019113002), Shaurya Dewan (2019101017), Snehal Kumar (2019101003)"
+date: "2023-04-23"
+output: pdf_document
+---
+
+```{r setup}
+# Basic Setup
+
+
+rm(list = setdiff(ls(), lsf.str()))
+library(readxl)
+library(ggplot2)
+library(fmsb)
+library(vcd)
+library(explore)
+library(corrplot)
+library(dplyr)
+library(car)
+library(rstatix)
+
+demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
+excel_sheets(demo_data_file)
+pred_data_file <- "../data/PredictingOutcomes_ParticipantPredictions.xlsx"
+excel_sheets(pred_data_file)
+strat_data_file <- "../data/PredictingOutcomes_QualitativeStrategyRatings.xlsx"
+excel_sheets(strat_data_file)
+
+```
+
+# Data Organization
+```{r}
+
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+    sheets <- excel_sheets(filename)
+    x <- lapply(sheets, function(X) read_excel(filename, sheet = X))
+    x <- lapply(x, as.data.frame)
+    names(x) <- sheets
+    x
+}
+
+demo_data <- read_excel_allsheets(demo_data_file)
+pred_data <- read_excel_allsheets(pred_data_file)
+
+data <- pred_data
+for(i in names(pred_data)) {       # for-loop over columns
+  if(i == "KEY") {
+    next
+  }
+    
+  data[[i]] <- left_join(pred_data[[i]], demo_data[[i]], by = "participant_id") %>% 
+    select(-ends_with(".y"), study = study.x, generator = generator.x, rate = rate.x) 
+  data[[i]]$score_prob <- data[[i]]$score_prob1 + data[[i]]$score_prob2 + data[[i]]$score_prob3
+  data[[i]]$score_fin <- data[[i]]$score_fin1 + data[[i]]$score_fin2
+  
+}
+```
+```{r}
+data1A <- data.frame(data[[names(data)[2]]])
+data1B <- data.frame(data[[names(data)[3]]])
+data2A <- data.frame(data[[names(data)[4]]])
+data2B <- data.frame(data[[names(data)[5]]])
+data3A <- data.frame(data[[names(data)[6]]])
+data3B <- data.frame(data[[names(data)[7]]])
+```
+
+# Performing t-tests between Condition on terminal streak lengths
+
+```{r}
+# T-test
+ttest <- function(df){
+  {
+    df$participant_id <- as.factor(df$participant_id)
+    res <- list()
+    for(i in 1:7){
+      df_bingo = df$prediction_recode[df$generator == "bingo" & df$terminal_streak_length == i]
+      df_stock = df$prediction_recode[df$generator == "stock" & df$terminal_streak_length == i]
+      df_analyst = df$prediction_recode[df$generator == "analyst" & df$terminal_streak_length == i]
+      outcome = df$prediction_recode
+      treatment = df$generator
+      t_stat_bingo_stock <- t.test(df_bingo,df_stock)
+      t_stat_bingo_analyst <- t.test(df_bingo,df_analyst)
+      t_stat_analyst_stock <- t.test(df_analyst,df_stock)
+     
+      res1 <- list(t_stat_bingo_stock,t_stat_bingo_analyst,t_stat_analyst_stock)
+      out <- paste0("T-test for terminal streak length: ", i)
+      # print("T-test for terminal streak length:",i)
+      print(out)
+      print(res1)
+      # res <- list(res,res1)
+      # tstats <- rbind(tstats,tstats_i)
+      # test.stat = abs(median(df_bingo)-median(df_stock))
+    }
+  }
+}
+
+```
+```{r}
+print("Study 1A")
+ttest(data1A)
+```
+```{r}
+print("Study 1B")
+ttest(data1A)
+```
+```{r}
+print("Study 2A")
+ttest(data1A)
+```
+```{r}
+print("Study 2B")
+ttest(data1A)
+```
+```{r}
+print("Study 3A")
+ttest(data1A)
+```
+```{r}
+print("Study 3B")
+ttest(data1A)
+```
+
+
+```{r}
+#Permutation test
+```
