@@ -185,7 +185,7 @@ scaled_corr <- function(data){
   x[,1] <- as.factor(x[,1])
   x[] <- sapply(x, as.numeric)
   x[] <- sapply(x, scale)
-  print(x)
+  # print(x)
   data_cor <- cor(x, method = "pearson")
   print(data_cor)
   return(data_cor)
@@ -197,54 +197,31 @@ pl_scale_corr <- function(data){
 pl_scale_corr(data1A)
 ```
 # ignore this
-```{r}
-rmocor <- twedt_dist_measures
-dist_rmc_mat <- rmcorr_mat(participant = Subject, 
-                           variables = c("Blindwalk Away",
-                                         "Blindwalk Toward",
-                                         "Triangulated BW",
-                                         "Verbal",
-                                         "Visual matching"),
-                           dataset = twedt_dist_measures,
-                           CI.level = 0.95)
-
-corrplot(dist_rmc_mat$matrix)
-df <- data.frame(
-  ID = rep(1:5, each = 3),
-  Measure = rep(c("A", "B", "C"), times = 5),
-  Score = rnorm(15)
-)
-
-# Calculate the repeated measures correlation using rmcorr()
-corr <- rmcorr(df, id = "ID", time = "Measure", method = "spearman")
-
-# Print the correlation coefficients
-corr$rho
-
-
-
-```
-# ignore this correlation
-```{r}
-rep_meas_corr <- function(data){
-  data <- data[which(data$type == "target"),]
-  search_list <- c("participant_id", "prediction_recode", "age")
-  search_indices <- which(colnames(data) %in% search_list)
-  x <- data.frame(data[,search_indices])
-  print(x)
-  dist_rmc_mat <- rmcorr_mat(participant = participant_id, 
-                           variables = c("age","prediction_recode"),
-                           dataset = x,
-                           CI.level = 0.95)
-  print(dist_rmc_mat$matrix)
-  return(dist_rmc_mat$matrix)
-}
-plot_rm_corr <- function(data){
-  corr_val <- rep_meas_corr(data)
-  corrplot(corr_val)
-}
-plot_rm_corr(data1A)
-```
+# ```{r}
+# rmocor <- twedt_dist_measures
+# dist_rmc_mat <- rmcorr_mat(participant = Subject, 
+#                            variables = c("Blindwalk Away",
+#                                          "Blindwalk Toward",
+#                                          "Triangulated BW",
+#                                          "Verbal",
+#                                          "Visual matching"),
+#                            dataset = twedt_dist_measures,
+#                            CI.level = 0.95)
+# 
+# corrplot(dist_rmc_mat$matrix)
+# df <- data.frame(
+#   ID = rep(1:5, each = 3),
+#   Measure = rep(c("A", "B", "C"), times = 5),
+#   Score = rnorm(15)
+# )
+# 
+# # Calculate the repeated measures correlation using rmcorr()
+# corr <- rmcorr(df, id = "ID", time = "Measure", method = "spearman")
+# 
+# # Print the correlation coefficients
+# corr$rho
+# 
+# ```
 # important correlation there are 6 windows each with different streaklength
 ```{r}
 separated_corr <- function(data){
