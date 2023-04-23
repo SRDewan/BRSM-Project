@@ -27,7 +27,10 @@ library(corrplot)
 library(dplyr)
 library(car)
 library(rstatix)
-
+library(rmcorr)
+library(ggpubr)
+```
+```{r}
 demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
 excel_sheets(demo_data_file)
 pred_data_file <- "../data/PredictingOutcomes_ParticipantPredictions.xlsx"
@@ -192,6 +195,92 @@ pl_scale_corr <- function(data){
 pl_scale_corr(data1A)
 ```
 ```{r}
+rmocor <- twedt_dist_measures
+dist_rmc_mat <- rmcorr_mat(participant = Subject, 
+                           variables = c("Blindwalk Away",
+                                         "Blindwalk Toward",
+                                         "Triangulated BW",
+                                         "Verbal",
+                                         "Visual matching"),
+                           dataset = twedt_dist_measures,
+                           CI.level = 0.95)
+
+corrplot(dist_rmc_mat$matrix)
+df <- data.frame(
+  ID = rep(1:5, each = 3),
+  Measure = rep(c("A", "B", "C"), times = 5),
+  Score = rnorm(15)
+)
+
+# Calculate the repeated measures correlation using rmcorr()
+corr <- rmcorr(df, id = "ID", time = "Measure", method = "spearman")
+
+# Print the correlation coefficients
+corr$rho
+
+
 
 ```
+```{r}
+rep_meas_corr <- function(data){
+  data <- data[which(data$type == "target"),]
+  search_list <- c("participant_id", "prediction_recode", "age")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
+  print(x)
+  dist_rmc_mat <- rmcorr_mat(participant = participant_id, 
+                           variables = c("age","prediction_recode"),
+                           dataset = x,
+                           CI.level = 0.95)
+  print(dist_rmc_mat$matrix)
+  return(dist_rmc_mat$matrix)
+}
+plot_rm_corr <- function(data){
+  corr_val <- rep_meas_corr(data)
+  corrplot(corr_val)
+}
+plot_rm_corr(data1A)
+```
+```{r}
+separated_corr <- function(data){
+  data <- data[which(data$type == "target"),]
+  search_list <- c("generator", "prediction_recode", "terminal_streak_length", "age", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
+  x[,which(colnames(x)=="generator")] <- as.factor(x[,which(colnames(x)=="generator")])
+  x[,which(colnames(x)=="highest_degree")] <- x[,which(colnames(x)=="highest_degree")]-1
+  x[,which(colnames(x)=="stocks")] <- x[,which(colnames(x)=="stocks")]+1
+  x[,which(colnames(x)=="gambling")] <- x[,which(colnames(x)=="gambling")]+1
+  x[] <- sapply(x, as.numeric)
+  x[,which(colnames(x)=="generator")] <- x[,which(colnames(x)=="generator")]-1
+  # print(x)
+  for(i in 2:7){
+    y <- x[which(x$terminal_streak_length == i),]
+    search_list <- c("generator", "prediction_recode", "age", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
+    search_indices <- which(colnames(y) %in% search_list)
+    y <- data.frame(y[,search_indices])
+    # print(paste0("dataframe y ", i))
+    # print(y)
+    data_cor <- cor(y, method = "pearson")
+    # print(data_cor)
+    corrplot(data_cor, tl.col = "black", main=paste0("Correlation_Streaklength ", i), method = "circle", diag=FALSE, type = "lower", mar=c(0,0,1,0))
+  }
+}
+separated_corr(data1A)
+```
+```{r}
+separated_corr(data1B)
+```
 
+```{r}
+separated_corr(data2A)
+```
+```{r}
+separated_corr(data2B)
+```
+```{r}
+separated_corr(data3A)
+```
+```{r}
+separated_corr(data3B)
+```
