@@ -30,6 +30,7 @@ library(rstatix)
 library(rmcorr)
 library(ggpubr)
 ```
+# data assignment
 ```{r}
 demo_data_file <- "../data/PredictingOutcomes_ParticipantDemographics.xlsx"
 excel_sheets(demo_data_file)
@@ -67,7 +68,7 @@ for(i in names(pred_data)) {       # for-loop over columns
   
 }
 ```
-
+# splitting the studies 
 ```{r}
 data1A <- data.frame(data[[names(data)[2]]])
 data1B <- data.frame(data[[names(data)[3]]])
@@ -97,7 +98,7 @@ study_b <- function(data){
   return(df)
 }
 ```
-
+# for visualisation
 ```{r}
 ggboxplot(data1A[which(data1A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
 color = "generator", palette = "jco") + labs(title = "Study 1A")
@@ -123,6 +124,7 @@ ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
 ggboxplot(data3A[which(data3A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
 color = "generator", palette = "jco") + labs(title = "Study 3A")
 ```
+# for correlation without streaklength
 ```{r}
 new <- study_b(data3B)
 ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
@@ -194,6 +196,7 @@ pl_scale_corr <- function(data){
 }
 pl_scale_corr(data1A)
 ```
+# ignore this
 ```{r}
 rmocor <- twedt_dist_measures
 dist_rmc_mat <- rmcorr_mat(participant = Subject, 
@@ -221,6 +224,7 @@ corr$rho
 
 
 ```
+# ignore this correlation
 ```{r}
 rep_meas_corr <- function(data){
   data <- data[which(data$type == "target"),]
@@ -241,6 +245,7 @@ plot_rm_corr <- function(data){
 }
 plot_rm_corr(data1A)
 ```
+# important correlation there are 6 windows each with different streaklength
 ```{r}
 separated_corr <- function(data){
   data <- data[which(data$type == "target"),]
