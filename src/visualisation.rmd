@@ -1,5 +1,5 @@
 ---
-title: "Demographic Analysis"
+title: "Visualisation"
 authors: "Debayan Saha (2019113002), Shaurya Dewan (2019101017), Snehal Kumar (2019101003)"
 date: "08/04/2023"
 output:
@@ -29,7 +29,7 @@ library(car)
 library(rstatix)
 library(rmcorr)
 library(ggpubr)
-library(tidyverse)
+# library(tidyverse)
 library(caret)
 ```
 # data assignment
@@ -180,23 +180,23 @@ pl_corr(data3B)
 ```
 
 ```{r}
-scaled_corr <- function(data){
-  search_list <- c("generator", "age", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
-  search_indices <- which(colnames(data) %in% search_list)
-  x <- data.frame(data[,search_indices])
-  x[,1] <- as.factor(x[,1])
-  x[] <- sapply(x, as.numeric)
-  x[] <- sapply(x, scale)
-  # print(x)
-  data_cor <- cor(x, method = "pearson")
-  print(data_cor)
-  return(data_cor)
-}
-pl_scale_corr <- function(data){
-  corr_val <- scaled_corr(data)
-  corrplot(corr_val, method="color", tl.col = "black", main="Correlation", mar=c(0,0,1,0))
-}
-pl_scale_corr(data1A)
+# scaled_corr <- function(data){
+#   search_list <- c("generator", "age", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
+#   search_indices <- which(colnames(data) %in% search_list)
+#   x <- data.frame(data[,search_indices])
+#   x[,1] <- as.factor(x[,1])
+#   x[] <- sapply(x, as.numeric)
+#   x[] <- sapply(x, scale)
+#   # print(x)
+#   data_cor <- cor(x, method = "pearson")
+#   print(data_cor)
+#   return(data_cor)
+# }
+# pl_scale_corr <- function(data){
+#   corr_val <- scaled_corr(data)
+#   corrplot(corr_val, method="color", tl.col = "black", main="Correlation", mar=c(0,0,1,0))
+# }
+# pl_scale_corr(data1A)
 ```
 # ignore this
 # ```{r}
@@ -247,7 +247,7 @@ separated_corr <- function(data){
     # print(y)
     data_cor <- cor(y, method = "pearson")
     # print(data_cor)
-    corrplot(data_cor, tl.col = "black", main=paste0("Correlation_Streaklength ", i), method = "circle", diag=FALSE, type = "lower", mar=c(0,0,1,0))
+    corrplot(data_cor, tl.col = "black", main=paste0("Correlation_Streaklength ", i), method = "color", mar=c(0,0,1,0))
   }
 }
 separated_corr(data1A)
