@@ -29,6 +29,8 @@ library(car)
 library(rstatix)
 library(rmcorr)
 library(ggpubr)
+library(tidyverse)
+library(caret)
 ```
 # data assignment
 ```{r}
@@ -265,4 +267,43 @@ separated_corr(data3A)
 ```
 ```{r}
 separated_corr(data3B)
+```
+
+# Multicollinearity
+```{r}
+
+extract_ivs <- function(data){
+  search_list <- c("generator", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin","prediction_recode")
+  
+  search_indices <- which(colnames(data) %in% search_list)
+  x<-data.frame(data[,search_indices])
+  x <- data.frame(data[,search_indices])
+  x[,which(colnames(x)=="generator")] <- as.factor(x[,which(colnames(x)=="generator")])
+  x[,which(colnames(x)=="highest_degree")] <- x[,which(colnames(x)=="highest_degree")]-1
+  x[,which(colnames(x)=="stocks")] <- x[,which(colnames(x)=="stocks")]+1
+  x[,which(colnames(x)=="gambling")] <- x[,which(colnames(x)=="gambling")]+1
+  x[] <- sapply(x, as.numeric)
+  x[,which(colnames(x)=="generator")] <- x[,which(colnames(x)=="generator")]-1
+  return(x)
+}
+
+data_1a <- extract_ivs(data1A)
+# Data splitting
+training.samples <- data_1a$prediction_recode %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- data_1a[training.samples, ]
+test.data <- data_1a[-training.samples, ]
+# Regression model
+model1 <- lm(prediction_recode ~., data = train.data)
+# Make predictions
+predictions <- model1 %>% predict(test.data)
+# Model performance
+data.frame(
+  RMSE = RMSE(predictions, test.data$prediction_recode),
+  R2 = R2(predictions, test.data$prediction_recode)
+)
+```
+```{r}
+# VIF score
+car::vif(model1)
 ```
