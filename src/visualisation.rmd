@@ -271,9 +271,39 @@ separated_corr(data3B)
 
 # Multicollinearity
 ```{r}
+avg_calc <- function(data, study){
+  df <- data.frame()
+  search_list <- c("generator", "participant_id", "type", "terminal_streak_length", "prediction_recode")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
+  x <- data.frame(x[which(x$type == "target"),])
+  # print(x)
+  for(i in unique(x$participant_id)){
+    # print(x[which(x$participant_id == i),]$generator[1])
+    if(study == 0){
+      char = "A"
+    }
+    else{
+      char = "B"
+    }
+    df <- rbind(df, c(char, x[which(x$participant_id == i),]$generator[1], i, sum(x[which(x$participant_id == i),]$prediction_recode)))
+  }
+  colnames(df) <- c("study", "generator", "participant_id", "prediction_recode")
+  df[,3] <- as.numeric(df[,3])
+  if(study == 0)
+  {
+    df[,4] <- as.numeric(df[,4])/100
+    df[,4] <- as.numeric(df[,4])
+  }
+  else
+  {
+    df[,4] <- as.numeric(df[,4])
+  }
+  return(df)
+}
 
 extract_ivs <- function(data){
-  search_list <- c("generator", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin","prediction_recode")
+  search_list <- c("generator", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin","prediction_recode","terminal_streak_length")
   
   search_indices <- which(colnames(data) %in% search_list)
   x<-data.frame(data[,search_indices])
@@ -286,7 +316,7 @@ extract_ivs <- function(data){
   x[,which(colnames(x)=="generator")] <- x[,which(colnames(x)=="generator")]-1
   return(x)
 }
-
+data1A_avg = avg_calc(data1A,0)
 data_1a <- extract_ivs(data1A)
 # Data splitting
 training.samples <- data_1a$prediction_recode %>%

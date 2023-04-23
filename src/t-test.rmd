@@ -102,6 +102,8 @@ avg_calc <- function(data, study){
 
 ttest <- function(df1,df2){
   res <- list()
+  df1$prediction_recode[df1$prediction_recode >= 50] <- 1
+  df1$prediction_recode[df1$prediction_recode < 50] <- 0
   for(i in 2:7){
     df1$participant_id <- as.factor(df1$participant_id)
     df2$participant_id <- as.factor(df2$participant_id)
@@ -111,7 +113,7 @@ ttest <- function(df1,df2){
     df2_bingo = df2$prediction_recode[df2$generator == "bingo" & df2$terminal_streak_length == i]
     df2_stock = df2$prediction_recode[df2$generator == "stock" & df2$terminal_streak_length == i]
     df2_analyst = df2$prediction_recode[df2$generator == "analyst" & df2$terminal_streak_length == i]
-   
+   print(df1,df2)
   
     # t_stat_bingo_stock <- t.test(df_bingo,df_stock)
     # t_stat_bingo_analyst <- t.test(df_bingo,df_analyst)
@@ -143,22 +145,30 @@ print("Study 1A")
 # print(data1A_avg)
 ps <- ttest(data1A, data1B)
 print(ps)
-# p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
-# print(p_bonf)
+p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
+print(p_bonf)
 #[1] 0.0162549 0.3120258 0.6248342
 #[1] 0.0162549 0.3120258 0.6248342
 #[1] 0.0162549 0.3120258 0.6248342
 ```
 ```{r}
-print("Study 1B")
-data1B_avg <- avg_calc(data1B, 1)
-ps <- ttest(data1B_avg)
+# print("Study 1B")
+# data1B_avg <- avg_calc(data1B, 1)
+# ps <- ttest(data1B_avg)
+# p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
+# print(p_bonf)
+ps <- ttest(data2A, data2B)
+print(ps)
 p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
 print(p_bonf)
 ```
 ```{r}
-print("Study 2A")
-ttest(data1A)
+# print("Study 2A")
+# ttest(data1A)
+ps <- ttest(data3A, data3B)
+print(ps)
+p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
+print(p_bonf)
 ```
 ```{r}
 print("Study 2B")
