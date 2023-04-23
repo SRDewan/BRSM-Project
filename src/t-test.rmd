@@ -69,40 +69,92 @@ data3B <- data.frame(data[[names(data)[7]]])
 
 ```{r}
 # T-test
-ttest <- function(df){
-  {
-    df$participant_id <- as.factor(df$participant_id)
-    res <- list()
-    for(i in 1:7){
-      df_bingo = df$prediction_recode[df$generator == "bingo" & df$terminal_streak_length == i]
-      df_stock = df$prediction_recode[df$generator == "stock" & df$terminal_streak_length == i]
-      df_analyst = df$prediction_recode[df$generator == "analyst" & df$terminal_streak_length == i]
-      outcome = df$prediction_recode
-      treatment = df$generator
-      t_stat_bingo_stock <- t.test(df_bingo,df_stock)
-      t_stat_bingo_analyst <- t.test(df_bingo,df_analyst)
-      t_stat_analyst_stock <- t.test(df_analyst,df_stock)
-     
-      res1 <- list(t_stat_bingo_stock,t_stat_bingo_analyst,t_stat_analyst_stock)
-      out <- paste0("T-test for terminal streak length: ", i)
-      # print("T-test for terminal streak length:",i)
-      print(out)
-      print(res1)
-      # res <- list(res,res1)
-      # tstats <- rbind(tstats,tstats_i)
-      # test.stat = abs(median(df_bingo)-median(df_stock))
+avg_calc <- function(data, study){
+  df <- data.frame()
+  search_list <- c("generator", "participant_id", "type", "terminal_streak_length", "prediction_recode")
+  search_indices <- which(colnames(data) %in% search_list)
+  x <- data.frame(data[,search_indices])
+  x <- data.frame(x[which(x$type == "target"),])
+  # print(x)
+  for(i in unique(x$participant_id)){
+    # print(x[which(x$participant_id == i),]$generator[1])
+    if(study == 0){
+      char = "A"
     }
+    else{
+      char = "B"
+    }
+    df <- rbind(df, c(char, x[which(x$participant_id == i),]$generator[1], i, sum(x[which(x$participant_id == i),]$prediction_recode)))
   }
+  colnames(df) <- c("study", "generator", "participant_id", "prediction_recode")
+  df[,3] <- as.numeric(df[,3])
+  if(study == 0)
+  {
+    df[,4] <- as.numeric(df[,4])/100
+    df[,4] <- as.numeric(df[,4])
+  }
+  else
+  {
+    df[,4] <- as.numeric(df[,4])
+  }
+  return(df)
+}
+
+ttest <- function(df1,df2){
+  res <- list()
+  for(i in 2:7){
+    df1$participant_id <- as.factor(df1$participant_id)
+    df2$participant_id <- as.factor(df2$participant_id)
+    df1_bingo = df1$prediction_recode[df1$generator == "bingo" & df1$terminal_streak_length == i]
+    df1_stock = df1$prediction_recode[df1$generator == "stock" & df1$terminal_streak_length == i]
+    df1_analyst = df1$prediction_recode[df1$generator == "analyst" & df1$terminal_streak_length == i]
+    df2_bingo = df2$prediction_recode[df2$generator == "bingo" & df2$terminal_streak_length == i]
+    df2_stock = df2$prediction_recode[df2$generator == "stock" & df2$terminal_streak_length == i]
+    df2_analyst = df2$prediction_recode[df2$generator == "analyst" & df2$terminal_streak_length == i]
+   
+  
+    # t_stat_bingo_stock <- t.test(df_bingo,df_stock)
+    # t_stat_bingo_analyst <- t.test(df_bingo,df_analyst)
+    # t_stat_analyst_stock <- t.test(df_analyst,df_stock)
+    t_stat_bingo <- t.test(df1_bingo,df2_bingo)
+    t_stat_analyst <- t.test(df1_analyst,df2_analyst)
+    t_stat_stock <- t.test(df1_stock,df2_stock)
+   
+    # res1 <- list(t_stat_bingo_stock,t_stat_bingo_analyst,t_stat_analyst_stock)
+    # resp <- list((t_stat_bingo_stock)$p.value,(t_stat_bingo_analyst)$p.value,(t_stat_analyst_stock)$p.value)
+    out <- paste0("T-test for terminal streak length: ",i)
+    print(out)
+    res1 <- list(t_stat_bingo,t_stat_analyst,t_stat_stock)
+   resp <- list((t_stat_bingo)$p.value,(t_stat_analyst)$p.value,(t_stat_stock)$p.value)
+    print(res1)
+    res <- append(res,resp)
+    # res <- list(res,res1)
+    # tstats <- rbind(tstats,tstats_i)
+    # test.stat = abs(median(df_bingo)-median(df_stock))
+    
+  }
+    return(res)
 }
 
 ```
 ```{r}
 print("Study 1A")
-ttest(data1A)
+# data1A_avg <- avg_calc(data1A, 0)
+# print(data1A_avg)
+ps <- ttest(data1A, data1B)
+print(ps)
+# p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
+# print(p_bonf)
+#[1] 0.0162549 0.3120258 0.6248342
+#[1] 0.0162549 0.3120258 0.6248342
+#[1] 0.0162549 0.3120258 0.6248342
 ```
 ```{r}
 print("Study 1B")
-ttest(data1A)
+data1B_avg <- avg_calc(data1B, 1)
+ps <- ttest(data1B_avg)
+p_bonf <- p.adjust(ps,method="bonferroni",n=length(ps))
+print(p_bonf)
 ```
 ```{r}
 print("Study 2A")
@@ -123,5 +175,5 @@ ttest(data1A)
 
 
 ```{r}
-#Permutation test
+#T test
 ```
