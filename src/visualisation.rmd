@@ -126,13 +126,13 @@ ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
 ggboxplot(data3A[which(data3A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
 color = "generator", palette = "jco") + labs(title = "Study 3A")
 ```
-# for correlation without streaklength
 ```{r}
 new <- study_b(data3B)
 ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
   geom_point(aes(color=generator))+
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 3B")
 ```
+# for correlation without streaklength
 ```{r}
 ord_corr <- function(data){
   search_list <- c("generator", "gender", "highest_degree", "stocks", "gambling", "score_prob", "score_fin")
