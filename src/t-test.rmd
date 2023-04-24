@@ -102,8 +102,8 @@ avg_calc <- function(data, study){
 
 ttest <- function(df1,df2){
   res <- list()
-  df1$prediction_recode[df1$prediction_recode >= 50] <- 1
   df1$prediction_recode[df1$prediction_recode < 50] <- 0
+  df1$prediction_recode[df1$prediction_recode >= 50] <- 1
   for(i in 2:7){
     df1$participant_id <- as.factor(df1$participant_id)
     df2$participant_id <- as.factor(df2$participant_id)
