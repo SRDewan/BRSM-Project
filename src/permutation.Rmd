@@ -173,7 +173,90 @@ print(p_val)
 bonferroni <- p.adjust(p_val, "bonferroni")
 print(bonferroni)
 ```
+# study 2
+```{r}
+p_val <- c()
+for(i in 2:7){
+  test1 <- permutation.test(data2A, data2B, 10000, "analyst", i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 2 - Analyst")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+  
+}
+```
+```{r}
+for(i in 2:7){
+  test1 <- permutation.test(data2A, data2B, 10000, "bingo",i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 2 - Bingo")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+}
+```
+```{r}
+for(i in 2:7){
+  test1 <- permutation.test(data2A, data2B, 10000, "stock",i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 2 - Stock")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+}
+```
+```{r}
+print(p_val)
+bonferroni <- p.adjust(p_val, "bonferroni")
+print(bonferroni)
 
+```
+# study 3
+```{r}
+p_val <- c()
+for(i in 2:7){
+  test1 <- permutation.test(data3A, data3B, 10000, "analyst", i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 3 - Analyst")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+  
+}
+```
+```{r}
+for(i in 2:7){
+  test1 <- permutation.test(data3A, data3B, 10000, "bingo",i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 3 - Bingo")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+}
+```
+```{r}
+for(i in 2:7){
+  test1 <- permutation.test(data3A, data3B, 10000, "stock",i)
+  test2 <- unlist(test1[1])
+  non_signi <- unlist(test1[2])
+  hist(test2, xlab = "T statistic", main = "Study 3 - Stock")
+  axis(side=1, at=c(-6,6))
+  abline(v = unlist(test1[3]), col="red")
+  p_val <- c(p_val, non_signi)
+}
+```
+```{r}
+print(p_val)
+bonferroni <- p.adjust(p_val, "bonferroni")
+print(bonferroni)
+
+```
 # study 2
 ```{r}
 test1 <- permutation.test(data2A, data2B, 10000, "analyst")
