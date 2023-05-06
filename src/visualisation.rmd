@@ -103,34 +103,34 @@ study_b <- function(data){
 # for visualisation
 ```{r}
 ggboxplot(data1A[which(data1A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
-color = "generator", palette = "jco") + labs(title = "Study 1A")
+color = "generator", palette = "jco") + labs(title = "Study 1A") + xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 ```{r}
 new <- study_b(data1B)
 ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
   geom_point(aes(color=generator))+
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 1B")
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 1B")+ xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 ```{r}
 ggboxplot(data2A[which(data2A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
-color = "generator", palette = "jco") + labs(title = "Study 2A")
+color = "generator", palette = "jco") + labs(title = "Study 2A")+ xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 ```{r}
 new <- study_b(data2B)
 ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
   geom_point(aes(color=generator))+
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 2B")
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 2B")+ xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 
 ```{r}
 ggboxplot(data3A[which(data3A$type=="target"),], x = "terminal_streak_length", y = "prediction_recode",
-color = "generator", palette = "jco") + labs(title = "Study 3A")
+color = "generator", palette = "jco") + labs(title = "Study 3A")+ xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 ```{r}
 new <- study_b(data3B)
 ggplot(new,aes(x=terminal_streak_length,y=prediction_recode,group=generator))+
   geom_point(aes(color=generator))+
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 3B")
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2))+ labs(title = "Study 3B")+ xlab("Terminal Streak Length") + ylab("Prediction value by participant")
 ```
 # for correlation without streaklength
 ```{r}
